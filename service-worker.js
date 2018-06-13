@@ -1,3 +1,7 @@
+/*
+ Credit: Service Workers: an Introduction By Matt Gaunt
+ */
+
 (function() {
   'use strict';
 
@@ -32,7 +36,6 @@
     'images/8_small.jpg',
     'images/9_small.jpg',
     'images/10_small.jpg',
-    // 'http://maps.googleapis.com/maps/api/js?key=AIzaSyA5oB1d6wPzlQG-aJMHzPgyIqOQBPQWVMU&libraries=places&callback=initMap',
   ];
 
   self.addEventListener('install', function(event) {
