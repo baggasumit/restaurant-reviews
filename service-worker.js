@@ -12,7 +12,6 @@
     'restaurant.html',
     'css/styles.css',
     'css/normalize.css',
-    'data/restaurants.json',
     'js/dbhelper.js',
     'js/main.js',
     'js/restaurant_info.js',

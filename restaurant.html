@@ -4,12 +4,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#333333" />
+  <link rel="manifest" href="/manifest.json">
   <!-- Normalize.css for better cross-browser consistency -->
-  <!-- <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" /> -->
-  <!-- <link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.0/normalize.css"> -->
+  <link rel="stylesheet" href="dist/css/normalize.css">
   <!-- Main CSS file -->
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="dist/css/styles.css">
   <title>Restaurant Info</title>
 </head>
 
@@ -68,6 +68,8 @@
   <!-- End footer -->
 
   <!-- Beginning scripts -->
+  <!-- Jake Archibald's IDB Library -->
+  <script src="https://cdn.jsdelivr.net/npm/idb@2.1.2/lib/idb.min.js"></script>
   <!-- Database helpers -->
   <script src="js/dbhelper.js"></script>
   <!-- Main javascript file -->

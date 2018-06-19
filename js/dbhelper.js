@@ -1,3 +1,4 @@
+// (function() {
 /**
  * Common database helper functions.
  */
@@ -8,28 +9,57 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     const port = 5500; // Change this to your server port
-    return `/data/restaurants.json`;
+    return `http://localhost:1337/restaurants`;
+  }
+
+  static fetchRestaurantsFromIndexedDb(callback) {
+    const dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
+      const keyValStore = upgradeDb.createObjectStore('restaurants');
+    });
+
+    dbPromise
+      .then((db) => {
+        const tx = db.transaction('restaurants');
+        const keyValStore = tx.objectStore('restaurants');
+        return keyValStore.get('allRestaurants');
+      })
+      .then((restaurants) => {
+        console.log('Restaurants from IndexedDb; Count: ', restaurants.length);
+        callback(null, restaurants);
+      });
   }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', DBHelper.DATABASE_URL);
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        // Got a success response from server!
-        const json = JSON.parse(xhr.responseText);
-        const restaurants = json.restaurants;
+    fetch(DBHelper.DATABASE_URL)
+      .then((response) => response.json())
+      .then((restaurants) => {
+        // console.table(data);
+        DBHelper.storeInIndexedDb(restaurants);
         callback(null, restaurants);
-      } else {
-        // Oops!. Got an error from server.
-        const error = `Request failed. Returned status of ${xhr.status}`;
-        callback(error, null);
-      }
-    };
-    xhr.send();
+      })
+      .catch((error) => {
+        console.log('Fetch error: ', error);
+        DBHelper.fetchRestaurantsFromIndexedDb(callback);
+        // callback(error, null);
+      });
+    // let xhr = new XMLHttpRequest();
+    // xhr.open('GET', DBHelper.DATABASE_URL);
+    // xhr.onload = () => {
+    //   if (xhr.status === 200) {
+    //     // Got a success response from server!
+    //     const json = JSON.parse(xhr.responseText);
+    //     const restaurants = json.restaurants;
+    //     callback(null, restaurants);
+    //   } else {
+    //     // Oops!. Got an error from server.
+    //     const error = `Request failed. Returned status of ${xhr.status}`;
+    //     callback(error, null);
+    //   }
+    // };
+    // xhr.send();
   }
 
   /**
@@ -87,6 +117,14 @@ class DBHelper {
     });
   }
 
+  static storeInIndexedDb(restaurants) {
+    const dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
+      const keyValStore = upgradeDb.createObjectStore('restaurants');
+      console.log('IndexedDb created');
+      keyValStore.put(restaurants, 'allRestaurants');
+    });
+  }
+
   /**
    * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
    */
@@ -101,6 +139,7 @@ class DBHelper {
         callback(error, null);
       } else {
         let results = restaurants;
+
         if (cuisine != 'all') {
           // filter by cuisine
           results = results.filter((r) => r.cuisine_type == cuisine);
@@ -167,6 +206,7 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
+    restaurant.photograph = restaurant.photograph || '10';
     return `/images/${restaurant.photograph}`;
   }
 
@@ -184,3 +224,4 @@ class DBHelper {
     return marker;
   }
 }
+// })();

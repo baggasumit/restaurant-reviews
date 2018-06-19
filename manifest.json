@@ -1,0 +1,15 @@
+{
+  "short_name": "Restaurant Reviews",
+  "name": "Restaurant Reviews",
+  "icons": [
+    {
+      "src": "images/Cutlery.svg",
+      "sizes": "512x512",
+      "type": "image/svg"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#fdfdfd",
+  "theme_color": "#333333",
+  "display": "standalone"
+}
