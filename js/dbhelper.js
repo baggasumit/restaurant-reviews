@@ -1,4 +1,3 @@
-// (function() {
 /**
  * Common database helper functions.
  */
@@ -7,8 +6,12 @@ class DBHelper {
    * Database URL.
    * Change this to restaurants.json file location on your server.
    */
-  static get DATABASE_URL() {
+  static get RESTAURANTS_URL() {
     return `http://localhost:1337/restaurants`;
+  }
+
+  static get REVIEWS_URL() {
+    return `http://localhost:1337/reviews/?restaurant_id=`;
   }
 
   static fetchRestaurantsFromIndexedDb(callback) {
@@ -23,8 +26,54 @@ class DBHelper {
         return keyValStore.get('allRestaurants');
       })
       .then((restaurants) => {
-        console.log('Restaurants from IndexedDb; Count: ', restaurants.length);
         callback(null, restaurants);
+      });
+  }
+
+  static fetchReviewsFromIndexedDb(restaurant, callback) {
+    // const dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
+    //   const keyValStore = upgradeDb.createObjectStore('restaurants');
+    // });
+    const dbPromise = idb.open('restaurant-db', 1);
+
+    dbPromise
+      .then((db) => {
+        const tx = db.transaction('restaurants');
+        const keyValStore = tx.objectStore('restaurants');
+        return keyValStore.get(restaurant.id);
+      })
+      .then((reviews) => {
+        restaurant.reviews = reviews;
+        callback(null, restaurant);
+      });
+  }
+
+  /**
+   * POST all reviews saved in IndexedDb while the app was offline
+   */
+  static postDeferredReviews() {
+    const dbPromise = idb.open('restaurant-db', 1);
+    let keyValStore;
+    dbPromise
+      .then((db) => {
+        const tx = db.transaction('restaurants', 'readwrite');
+        keyValStore = tx.objectStore('restaurants');
+        return keyValStore.get('deferredReviews');
+      })
+      .then((reviews) => {
+        if (reviews.length === 0) return; // Nothing to do if no Deferred Reviews
+        keyValStore.put([], 'deferredReviews'); // Reset
+        return Promise.all(
+          reviews.map((review) =>
+            fetch('http://localhost:1337/reviews/', {
+              method: 'POST',
+              body: JSON.stringify(review),
+            })
+          )
+        );
+      })
+      .then(() => {
+        console.log('Back online, all reviews POSTed');
       });
   }
 
@@ -32,16 +81,35 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.DATABASE_URL)
+    fetch(DBHelper.RESTAURANTS_URL)
       .then((response) => response.json())
       .then((restaurants) => {
         // console.table(data);
-        DBHelper.storeInIndexedDb(restaurants);
+        DBHelper.storeRestaurantsInIndexedDb(restaurants);
         callback(null, restaurants);
       })
       .catch((error) => {
         console.log('Fetch error: ', error);
         DBHelper.fetchRestaurantsFromIndexedDb(callback);
+      });
+  }
+
+  /**
+   * Fetch reviews for a given restaurant.
+   */
+  static fetchReviews(restaurant, callback) {
+    fetch(`${DBHelper.REVIEWS_URL}${restaurant.id}`)
+      .then((response) => response.json())
+      .then((reviews) => {
+        // console.table(data);
+        // DBHelper.storeInIndexedDb(restaurants);
+        restaurant.reviews = reviews;
+        DBHelper.storeReviewsInIndexedDb(restaurant.id, reviews);
+        callback(null, restaurant);
+      })
+      .catch((error) => {
+        console.log('Fetch error: ', error);
+        DBHelper.fetchReviewsFromIndexedDb(restaurant, callback);
       });
   }
 
@@ -57,7 +125,8 @@ class DBHelper {
         const restaurant = restaurants.find((r) => r.id == id);
         if (restaurant) {
           // Got the restaurant
-          callback(null, restaurant);
+          DBHelper.fetchReviews(restaurant, callback);
+          // callback(null, restaurant);
         } else {
           // Restaurant does not exist in the database
           callback('Restaurant does not exist', null);
@@ -100,11 +169,22 @@ class DBHelper {
     });
   }
 
-  static storeInIndexedDb(restaurants) {
+  static storeRestaurantsInIndexedDb(restaurants) {
     const dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
       const keyValStore = upgradeDb.createObjectStore('restaurants');
       console.log('IndexedDb created');
       keyValStore.put(restaurants, 'allRestaurants');
+      keyValStore.put([], 'deferredReviews');
+    });
+  }
+
+  static storeReviewsInIndexedDb(restaurantId, reviews) {
+    const dbPromise = idb.open('restaurant-db', 1);
+
+    dbPromise.then((db) => {
+      const tx = db.transaction('restaurants', 'readwrite');
+      const keyValStore = tx.objectStore('restaurants');
+      keyValStore.put(reviews, restaurantId);
     });
   }
 
@@ -207,4 +287,3 @@ class DBHelper {
     return marker;
   }
 }
-// })();

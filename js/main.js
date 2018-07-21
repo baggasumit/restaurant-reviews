@@ -1,4 +1,3 @@
-// (function() {
 let restaurants, neighborhoods, cuisines;
 var map;
 var markers = [];
@@ -26,6 +25,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   if (!window.navigator.onLine) {
     updateRestaurants();
   }
+  window.addEventListener('online', DBHelper.postDeferredReviews);
 });
 
 /*
@@ -206,6 +206,7 @@ createRestaurantHTML = (restaurant) => {
   const source_webp_small = document.createElement('source');
   source_webp_small.media = '(max-width: 550px)';
   source_webp_small.srcset = image_path + '_small.webp';
+  source_webp_small.type = 'image/webp';
   picture.append(source_webp_small);
 
   const source_small = document.createElement('source');
@@ -215,6 +216,7 @@ createRestaurantHTML = (restaurant) => {
 
   const source_webp = document.createElement('source');
   source_webp.srcset = image_path + '.webp';
+  source_webp.type = 'image/webp';
   picture.append(source_webp);
 
   const image = document.createElement('img');
@@ -228,6 +230,18 @@ createRestaurantHTML = (restaurant) => {
   const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   li.append(name);
+
+  const heart = document.createElement('span');
+  heart.classList.add('heart');
+  // Using JSON parse because value can be String "false" instead of Boolean false
+  if (JSON.parse(restaurant.is_favorite)) {
+    heart.classList.add('hearted');
+  }
+  heart.addEventListener(
+    'click',
+    toggleFavoriteRestaurant.bind(heart, restaurant.id)
+  );
+  li.append(heart);
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
@@ -245,6 +259,20 @@ createRestaurantHTML = (restaurant) => {
 };
 
 /**
+ * Mark a restaurant as favorite and sent POST request to database
+ */
+function toggleFavoriteRestaurant(restaurantId) {
+  const isFavorite = this.classList.contains('hearted') ? true : false;
+
+  fetch(
+    `http://localhost:1337/restaurants/${restaurantId}/?is_favorite=${!isFavorite}`,
+    { method: 'PUT' }
+  ).then(() => {
+    this.classList.toggle('hearted');
+  });
+}
+
+/**
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
@@ -257,4 +285,3 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 };
-// })();

@@ -231,6 +231,23 @@ nav h1 a {
   text-transform: uppercase;
 }
 
+.heart:hover {
+  cursor: pointer;
+}
+
+.heart::after {
+  font-size: 30px;
+  content: '♡';
+  line-height: 1em;
+}
+
+.hearted.heart::after {
+  font-size: 30px;
+  content: '♥';
+  line-height: 1em;
+  color: red;
+}
+
 /* ====================== Restaurant Details ====================== */
 
 .inside header {
@@ -306,6 +323,43 @@ nav h1 a {
   letter-spacing: -1px;
   padding-bottom: 1pt;
 }
+
+#add-review {
+  margin-bottom: 36px;
+}
+
+#add-review > * {
+  margin-bottom: 16px;
+}
+
+#add-review input[name='name'] {
+  height: 32px;
+  max-width: 320px;
+  width: 100%;
+}
+
+#add-review fieldset {
+  margin-left: 0;
+  max-width: 320px;
+  width: 100%;
+}
+
+#add-review input[type='radio'] {
+  margin-right: 20px;
+}
+
+#add-review textarea {
+  max-width: 500px;
+  width: 100%;
+}
+
+#add-review button[type='submit'] {
+  background: white;
+  color: #a85a00;
+  height: 30px;
+  width: 160px;
+}
+
 #reviews-list {
   margin: 0;
   padding: 0;
