@@ -200,9 +200,13 @@ getParameterByName = (name, url) => {
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 };
 
+/**
+ * Handle form submit when user adds a new review
+ */
 function addReview(event) {
   event.preventDefault();
 
+  // Get restaurant id from page URL
   const restaurantId = window.location.search.slice(4);
   const review = {
     name: this.name.value,
@@ -223,11 +227,14 @@ function addReview(event) {
         console.log('Could not POST review; Error: ', error);
       });
   } else {
-    console.log('App is offine, save review to IndexedDb');
+    console.log('App is offine, saving review to IndexedDb');
     saveReviewToIndexedDb(review);
   }
 }
 
+/**
+ * Save review to IndexedDb when the app is offline
+ */
 function saveReviewToIndexedDb(review) {
   const dbPromise = idb.open('restaurant-db', 1);
   let tx, keyValStore;
