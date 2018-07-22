@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
       }
     });
   }
+  document.querySelector('.show-map').addEventListener('click', function() {
+    document.querySelector('#map').classList.toggle('hide');
+    this.classList.toggle('hide');
+  });
   document.querySelector('#add-review').addEventListener('submit', addReview);
   window.addEventListener('online', DBHelper.postDeferredReviews);
 });

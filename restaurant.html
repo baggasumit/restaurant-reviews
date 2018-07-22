@@ -9,7 +9,7 @@
   <!-- Normalize.css for better cross-browser consistency -->
   <link rel="stylesheet" href="dist/css/normalize.css">
   <!-- Main CSS file -->
-  <link rel="stylesheet" href="dist/css/styles.css">
+  <link rel="stylesheet" href="dist/css/details.css">
   <title>Restaurant Info</title>
 </head>
 
@@ -22,14 +22,14 @@
       <h1>
         <a href="/">Restaurant Reviews</a>
       </h1>
+      <!-- Beginning breadcrumb -->
+      <ul aria-label="Breadcrumb" id="breadcrumb">
+        <li>
+          <a href="/">Home</a>
+        </li>
+      </ul>
+      <!-- End breadcrumb -->
     </nav>
-    <!-- Beginning breadcrumb -->
-    <ul id="breadcrumb">
-      <li>
-        <a href="/">Home</a>
-      </li>
-    </ul>
-    <!-- End breadcrumb -->
     <!-- End nav -->
   </header>
   <!-- End header -->
@@ -37,13 +37,16 @@
   <!-- Beginning main -->
   <main id="maincontent">
     <!-- Beginning map -->
-    <section id="map-container" aria-label="Restaurant Map">
-      <div id="map"></div>
+    <section id="map-container" aria-label="Restaurant Map" role="application">
+      <div class="show-map-container">
+        <button class="show-map">Show Map</button>
+      </div>
+      <div id="map" class="hide"></div>
     </section>
     <!-- End map -->
     <!-- Beginning restaurant -->
     <section id="restaurant-container">
-      <h1 id="restaurant-name"></h1>
+      <h2 id="restaurant-name"></h2>
       <img id="restaurant-img">
       <p id="restaurant-cuisine"></p>
       <p id="restaurant-address"></p>
@@ -53,23 +56,28 @@
     <!-- Beginning reviews -->
     <section id="reviews-container">
       <h3>Reviews</h3>
-      <form id="add-review">
+      <form id="add-review" role="form">
         <label for="reviewer-name">Name</label>
         <br>
         <input type="text" id="reviewer-name" name="name" required>
         <fieldset>
           <legend>Rating</legend>
 
-          <label for="rating-1">1</label>
-          <input type="radio" name="rating" value="1" required>
-          <label for="rating-2">2</label>
-          <input type="radio" name="rating" value="2">
-          <label for="rating-3">3</label>
-          <input type="radio" name="rating" value="3">
-          <label for="rating-4">4</label>
-          <input type="radio" name="rating" value="4">
-          <label for="rating-5">5</label>
-          <input type="radio" name="rating" value="5">
+          <label>1
+            <input type="radio" name="rating" value="1" required>
+          </label>
+          <label>2
+            <input type="radio" name="rating" value="2">
+          </label>
+          <label>3
+            <input type="radio" name="rating" value="3">
+          </label>
+          <label>4
+            <input type="radio" name="rating" value="4">
+          </label>
+          <label>5
+            <input type="radio" name="rating" value="5">
+          </label>
         </fieldset>
         <label for="review-comment">Comment</label>
         <br>

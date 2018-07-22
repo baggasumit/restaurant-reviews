@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#333333" />
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="dist/css/normalize.css">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="dist/css/main.css">
   <title>Restaurant Reviews</title>
 </head>
 
@@ -22,8 +22,11 @@
   </header>
 
   <main id="maincontent">
-    <section id="map-container" aria-label="Restaurants map">
-      <div id="map"></div>
+    <section id="map-container" aria-label="Restaurants map" role="application">
+      <div class="show-map-container">
+        <button class="show-map">Show Map</button>
+      </div>
+      <div id="map" class="hide"></div>
     </section>
     <section>
       <div class="filter-options">

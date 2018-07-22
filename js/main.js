@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
   if (!window.navigator.onLine) {
     updateRestaurants();
   }
+  document.querySelector('.show-map').addEventListener('click', function() {
+    document.querySelector('#map').classList.toggle('hide');
+    this.classList.toggle('hide');
+  });
   window.addEventListener('online', DBHelper.postDeferredReviews);
 });
 
