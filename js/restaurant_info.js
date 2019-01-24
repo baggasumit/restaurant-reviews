@@ -220,7 +220,7 @@ function addReview(event) {
   };
 
   if (window.navigator.onLine) {
-    fetch('http://localhost:1337/reviews/', {
+    fetch('https://restaurant-reviews-server-api.herokuapp.com/reviews/', {
       method: 'POST',
       body: JSON.stringify(review),
     })

@@ -269,7 +269,7 @@ function toggleFavoriteRestaurant(restaurantId) {
   const isFavorite = this.classList.contains('hearted') ? true : false;
 
   fetch(
-    `http://localhost:1337/restaurants/${restaurantId}/?is_favorite=${!isFavorite}`,
+    `https://restaurant-reviews-server-api.herokuapp.com/restaurants/${restaurantId}/?is_favorite=${!isFavorite}`,
     { method: 'PUT' }
   ).then(() => {
     this.classList.toggle('hearted');

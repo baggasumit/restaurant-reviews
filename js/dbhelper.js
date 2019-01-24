@@ -7,11 +7,11 @@ class DBHelper {
    * Change this to restaurants.json file location on your server.
    */
   static get RESTAURANTS_URL() {
-    return `http://localhost:1337/restaurants`;
+    return `https://restaurant-reviews-server-api.herokuapp.com/restaurants`;
   }
 
   static get REVIEWS_URL() {
-    return `http://localhost:1337/reviews/?restaurant_id=`;
+    return `https://restaurant-reviews-server-api.herokuapp.com/reviews/?restaurant_id=`;
   }
 
   static fetchRestaurantsFromIndexedDb(callback) {
@@ -65,10 +65,13 @@ class DBHelper {
         keyValStore.put([], 'deferredReviews'); // Reset
         return Promise.all(
           reviews.map((review) =>
-            fetch('http://localhost:1337/reviews/', {
-              method: 'POST',
-              body: JSON.stringify(review),
-            })
+            fetch(
+              'https://restaurant-reviews-server-api.herokuapp.com/reviews/',
+              {
+                method: 'POST',
+                body: JSON.stringify(review),
+              }
+            )
           )
         );
       })
