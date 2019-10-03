@@ -1,5 +1,5 @@
 let restaurants, neighborhoods, cuisines;
-var map;
+var newMap;
 var markers = [];
 const image_alts = {
   image_1: 'Group of people sitting in a restaurant',
@@ -18,6 +18,7 @@ const image_alts = {
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initMap();
   fetchNeighborhoods();
   fetchCuisines();
   // When application is offline, initMap callback won't be called.
@@ -121,9 +122,35 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 };
 
 /**
+ * Initialize leaflet map, called from HTML.
+ */
+initMap = () => {
+  self.newMap = L.map('map', {
+    center: [40.722216, -73.987501],
+    zoom: 12,
+    scrollWheelZoom: false,
+  });
+  L.tileLayer(
+    'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.jpg70?access_token={mapboxToken}',
+    {
+      mapboxToken:
+        'pk.eyJ1IjoiYmFnZ2FzdW1pdCIsImEiOiJjazBwbmt2bmIwbmNuM2NuOHhqYzBjZzN3In0.hmrtonLqAHdBQ_YgtsjokA',
+      maxZoom: 18,
+      attribution:
+        'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+        '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      id: 'mapbox.streets',
+    }
+  ).addTo(newMap);
+
+  updateRestaurants();
+};
+
+/**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
+window.initGMap = () => {
   let loc = {
     lat: 40.722216,
     lng: -73.987501,
@@ -176,7 +203,10 @@ resetRestaurants = (restaurants) => {
   ul.innerHTML = '';
 
   // Remove all map markers
-  self.markers.forEach((m) => m.setMap(null));
+  // self.markers.forEach((m) => m.setMap(null));
+  if (self.markers) {
+    self.markers.forEach((marker) => marker.remove());
+  }
   self.markers = [];
   self.restaurants = restaurants;
 };
@@ -196,7 +226,8 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 /**
  * Create restaurant HTML.
  */
-createRestaurantHTML = (restaurant) => {
+createRestaurantHTML = (restaurantObj) => {
+  const restaurant = restaurantObj.fields;
   const li = document.createElement('li');
   const image_path = DBHelper.imageUrlForRestaurant(restaurant);
 
@@ -238,12 +269,13 @@ createRestaurantHTML = (restaurant) => {
   const heart = document.createElement('span');
   heart.classList.add('heart');
   // Using JSON parse because value can be String "false" instead of Boolean false
-  if (JSON.parse(restaurant.is_favorite)) {
+  // if (JSON.parse(restaurant.is_favorite)) {
+  if (restaurant.is_favorite) {
     heart.classList.add('hearted');
   }
   heart.addEventListener(
     'click',
-    toggleFavoriteRestaurant.bind(heart, restaurant.id)
+    toggleFavoriteRestaurant.bind(heart, restaurantObj.id)
   );
   li.append(heart);
 
@@ -267,13 +299,22 @@ createRestaurantHTML = (restaurant) => {
  */
 function toggleFavoriteRestaurant(restaurantId) {
   const isFavorite = this.classList.contains('hearted') ? true : false;
-
-  fetch(
-    `https://restaurant-reviews-server-api.herokuapp.com/restaurants/${restaurantId}/?is_favorite=${!isFavorite}`,
-    { method: 'PUT' }
-  ).then(() => {
-    this.classList.toggle('hearted');
+  const url = `https://api.airtable.com/v0/appYOMzd3a6vUTxwE/Restaurants/${restaurantId}`;
+  const headers = new Headers({
+    Authorization: 'Bearer key7Jc1cbchLjkC4R',
+    'Content-Type': 'application/json',
   });
+  const data = {
+    fields: {
+      is_favorite: !isFavorite,
+    },
+  };
+
+  fetch(url, { method: 'PATCH', headers, body: JSON.stringify(data) }).then(
+    () => {
+      this.classList.toggle('hearted');
+    }
+  );
 }
 
 /**
@@ -282,10 +323,26 @@ function toggleFavoriteRestaurant(restaurantId) {
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach((restaurant) => {
     // Add marker to the map
-    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
+    const marker = DBHelper.mapMarkerForRestaurant(
+      restaurant.fields,
+      self.newMap
+    );
+    marker.on('click', onClick);
+    function onClick() {
+      window.location.href = marker.options.url;
+    }
+    self.markers.push(marker);
+  });
+};
+/*
+addMarkersToMap = (restaurants = self.restaurants) => {
+  restaurants.forEach((restaurant) => {
+    // Add marker to the map
+    const marker = DBHelper.mapMarkerForRestaurant(restaurant.fields, self.map);
     google.maps.event.addListener(marker, 'click', () => {
       window.location.href = marker.url;
     });
     self.markers.push(marker);
   });
 };
+*/

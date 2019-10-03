@@ -1,5 +1,5 @@
 let restaurant;
-var map;
+var newMap;
 
 // When application is offline, initMap callback won't be called.
 // Therefore, updating the DOM with Restaurant Info has to be done here.
@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       }
     });
   }
+  initMap();
   document.querySelector('.show-map').addEventListener('click', function() {
     document.querySelector('#map').classList.toggle('hide');
     this.classList.toggle('hide');
@@ -23,8 +24,42 @@ document.addEventListener('DOMContentLoaded', (event) => {
 });
 
 /**
+ * Initialize leaflet map
+ */
+initMap = () => {
+  fetchRestaurantFromURL((error, restaurant) => {
+    if (error) {
+      // Got an error!
+      console.error(error);
+    } else {
+      self.newMap = L.map('map', {
+        center: restaurant.latlng.split(','),
+        zoom: 16,
+        scrollWheelZoom: false,
+      });
+      L.tileLayer(
+        'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.jpg70?access_token={mapboxToken}',
+        {
+          mapboxToken:
+            'pk.eyJ1IjoiYmFnZ2FzdW1pdCIsImEiOiJjazBwbmt2bmIwbmNuM2NuOHhqYzBjZzN3In0.hmrtonLqAHdBQ_YgtsjokA',
+          maxZoom: 18,
+          attribution:
+            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+            '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+          id: 'mapbox.streets',
+        }
+      ).addTo(newMap);
+      fillBreadcrumb();
+      DBHelper.mapMarkerForRestaurant(self.restaurant, self.newMap);
+    }
+  });
+};
+
+/**
  * Initialize Google map, called from HTML.
  */
+/*
 window.initMap = () => {
   if (!window.navigator.onLine) return; // If it is called even if app is offline
   fetchRestaurantFromURL((error, restaurant) => {
@@ -34,7 +69,7 @@ window.initMap = () => {
     } else {
       self.map = new google.maps.Map(document.getElementById('map'), {
         zoom: 16,
-        center: restaurant.latlng,
+        center: createLatLngObject(restaurant.latlng),
         scrollwheel: false,
       });
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
@@ -43,6 +78,7 @@ window.initMap = () => {
     }
   });
 };
+*/
 
 /**
  * Get current restaurant from page URL.
@@ -103,6 +139,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 fillRestaurantHoursHTML = (
   operatingHours = self.restaurant.operating_hours
 ) => {
+  operatingHours = JSON.parse(operatingHours);
   const hours = document.getElementById('restaurant-hours');
   for (let key in operatingHours) {
     const row = document.createElement('tr');
@@ -136,7 +173,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   }
   const ul = document.getElementById('reviews-list');
   reviews.forEach((review) => {
-    ul.appendChild(createReviewHTML(review));
+    ul.appendChild(createReviewHTML(review.fields));
   });
   container.appendChild(ul);
 };
@@ -209,21 +246,27 @@ getParameterByName = (name, url) => {
  */
 function addReview(event) {
   event.preventDefault();
-
+  console.log(self.restaurant, self.restaurantId);
   // Get restaurant id from page URL
-  const restaurantId = window.location.search.slice(4);
+  // const restaurantId = window.location.search.slice(4);
   const review = {
     name: this.name.value,
-    rating: this.rating.value,
-    restaurant_id: restaurantId,
+    rating: Number(this.rating.value),
+    restaurant_id: [self.restaurantId],
     comments: this.comments.value,
   };
 
+  const url = `https://api.airtable.com/v0/appYOMzd3a6vUTxwE/Reviews`;
+  const headers = new Headers({
+    Authorization: 'Bearer key7Jc1cbchLjkC4R',
+    'Content-Type': 'application/json',
+  });
+  const data = {
+    fields: review,
+  };
+
   if (window.navigator.onLine) {
-    fetch('https://restaurant-reviews-server-api.herokuapp.com/reviews/', {
-      method: 'POST',
-      body: JSON.stringify(review),
-    })
+    fetch(url, { method: 'POST', headers, body: JSON.stringify(data) })
       .then(() => {
         window.location.reload();
       })

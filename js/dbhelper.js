@@ -7,11 +7,11 @@ class DBHelper {
    * Change this to restaurants.json file location on your server.
    */
   static get RESTAURANTS_URL() {
-    return `https://restaurant-reviews-server-api.herokuapp.com/restaurants`;
+    return `https://api.airtable.com/v0/appYOMzd3a6vUTxwE/Restaurants`;
   }
 
   static get REVIEWS_URL() {
-    return `https://restaurant-reviews-server-api.herokuapp.com/reviews/?restaurant_id=`;
+    return `https://api.airtable.com/v0/appYOMzd3a6vUTxwE/Reviews/?filterByFormula=`;
   }
 
   static fetchRestaurantsFromIndexedDb(callback) {
@@ -84,9 +84,11 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    fetch(DBHelper.RESTAURANTS_URL)
+    const headers = new Headers({ Authorization: 'Bearer key7Jc1cbchLjkC4R' });
+    fetch(DBHelper.RESTAURANTS_URL, { method: 'GET', headers })
       .then((response) => response.json())
-      .then((restaurants) => {
+      .then((data) => {
+        const restaurants = data.records;
         // console.table(data);
         DBHelper.storeRestaurantsInIndexedDb(restaurants);
         callback(null, restaurants);
@@ -101,11 +103,16 @@ class DBHelper {
    * Fetch reviews for a given restaurant.
    */
   static fetchReviews(restaurant, callback) {
-    fetch(`${DBHelper.REVIEWS_URL}${restaurant.id}`)
+    const headers = new Headers({ Authorization: 'Bearer key7Jc1cbchLjkC4R' });
+    fetch(`${DBHelper.REVIEWS_URL}({restaurant_id}=${restaurant.id})`, {
+      method: 'GET',
+      headers,
+    })
       .then((response) => response.json())
-      .then((reviews) => {
+      .then((data) => {
         // console.table(data);
         // DBHelper.storeInIndexedDb(restaurants);
+        const reviews = data.records;
         restaurant.reviews = reviews;
         DBHelper.storeReviewsInIndexedDb(restaurant.id, reviews);
         callback(null, restaurant);
@@ -125,10 +132,12 @@ class DBHelper {
       if (error) {
         callback(error, null);
       } else {
-        const restaurant = restaurants.find((r) => r.id == id);
+        if (!restaurants) return;
+        const restaurant = restaurants.find((r) => r.fields.id == id);
         if (restaurant) {
           // Got the restaurant
-          DBHelper.fetchReviews(restaurant, callback);
+          self.restaurantId = restaurant.id;
+          DBHelper.fetchReviews(restaurant.fields, callback);
           // callback(null, restaurant);
         } else {
           // Restaurant does not exist in the database
@@ -148,7 +157,9 @@ class DBHelper {
         callback(error, null);
       } else {
         // Filter restaurants to have only given cuisine type
-        const results = restaurants.filter((r) => r.cuisine_type == cuisine);
+        const results = restaurants.filter(
+          (r) => r.fields.cuisine_type == cuisine
+        );
         callback(null, results);
       }
     });
@@ -165,7 +176,7 @@ class DBHelper {
       } else {
         // Filter restaurants to have only given neighborhood
         const results = restaurants.filter(
-          (r) => r.neighborhood == neighborhood
+          (r) => r.fields.neighborhood == neighborhood
         );
         callback(null, results);
       }
@@ -208,11 +219,13 @@ class DBHelper {
 
         if (cuisine != 'all') {
           // filter by cuisine
-          results = results.filter((r) => r.cuisine_type == cuisine);
+          results = results.filter((r) => r.fields.cuisine_type == cuisine);
         }
         if (neighborhood != 'all') {
           // filter by neighborhood
-          results = results.filter((r) => r.neighborhood == neighborhood);
+          results = results.filter(
+            (r) => r.fields.neighborhood == neighborhood
+          );
         }
         callback(null, results);
       }
@@ -230,7 +243,7 @@ class DBHelper {
       } else {
         // Get all neighborhoods from all restaurants
         const neighborhoods = restaurants.map(
-          (v, i) => restaurants[i].neighborhood
+          (v, i) => restaurants[i].fields.neighborhood
         );
         // Remove duplicates from neighborhoods
         const uniqueNeighborhoods = neighborhoods.filter(
@@ -251,7 +264,9 @@ class DBHelper {
         callback(error, null);
       } else {
         // Get all cuisines from all restaurants
-        const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type);
+        const cuisines = restaurants.map(
+          (v, i) => restaurants[i].fields.cuisine_type
+        );
         // Remove duplicates from cuisines
         const uniqueCuisines = cuisines.filter(
           (v, i) => cuisines.indexOf(v) == i
@@ -280,8 +295,19 @@ class DBHelper {
    * Map marker for a restaurant.
    */
   static mapMarkerForRestaurant(restaurant, map) {
+    // https://leafletjs.com/reference-1.3.0.html#marker
+    const marker = new L.marker(restaurant.latlng.split(','), {
+      title: restaurant.name,
+      alt: restaurant.name,
+      url: DBHelper.urlForRestaurant(restaurant),
+    });
+    marker.addTo(newMap);
+    return marker;
+  }
+  /*
+  static mapMarkerForRestaurant(restaurant, map) {
     const marker = new google.maps.Marker({
-      position: restaurant.latlng,
+      position: createLatLngObject(restaurant.latlng),
       title: restaurant.name,
       url: DBHelper.urlForRestaurant(restaurant),
       map: map,
@@ -289,4 +315,5 @@ class DBHelper {
     });
     return marker;
   }
+  */
 }
